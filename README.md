@@ -1,0 +1,2 @@
+# PySniT
+Python Snippet Tool
