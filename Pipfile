@@ -7,10 +7,13 @@ verify_ssl = true
 autopep8 = "*"
 flake8 = "*"
 pytest = "*"
+mypy = "*"
+pytest-cov = "*"
 
 [packages]
 fire = "*"
 pysnit = {editable = true,path = "."}
+typing-extensions = "*"
 
 [requires]
 python_version = "3.6"
@@ -21,3 +24,4 @@ python_version = "3.6"
 "test:out" = "pytest -v --capture=no" # passしたかどうかに関わらずprintを標準出力に出力する
 "lint" = "flake8 --exclude 'tests' --show-source ."
 "format" = "autopep8 -ivr . --exclude tests"
+"type" = "mypy ./src --config-file ./mypy.ini"
