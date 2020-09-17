@@ -6,6 +6,7 @@ from functools import wraps
 import warnings
 from .utils import remove_decorator
 
+
 class SnippetType(NamedTuple):
     name: str
     prefix: str
@@ -83,4 +84,5 @@ class snippet:
         for key in self._kwargs.keys():
             if not key in item_keys:
                 warnings.warn('`{}` is not valid argument.'.format(key))
-                warnings.warn('Valid arguments ars `prefix` and `description`.')
+                warnings.warn(
+                    'Valid arguments ars `prefix` and `description`.')

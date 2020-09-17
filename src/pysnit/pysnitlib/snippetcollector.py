@@ -2,6 +2,7 @@ from . import utils
 import toml
 import json
 
+
 class SnippetCollector:
 
     def __init__(self):

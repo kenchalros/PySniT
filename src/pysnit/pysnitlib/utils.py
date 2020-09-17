@@ -15,6 +15,7 @@ def load_module_from_path(module_name: str, module_path: str):
     spec.loader.exec_module(module)
     return module
 
+
 def remove_decorator(srccode: str, decorator: str) -> str:
     """getsourceの返り値からデコレータ部分を取り除く
     :param srccode: getsourceの返り値
