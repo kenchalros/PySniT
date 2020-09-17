@@ -18,6 +18,37 @@ class TestUtils:
         # load module
         module = utils.load_module_from_path('sample', module_path)
         # check
-        actualsrc = inspect.getsource(module)
-        expectedsrc = inspect.getsource(sample)
-        assert actualsrc == expectedsrc
+        actual_src = inspect.getsource(module)
+        expected_src = inspect.getsource(sample)
+        assert actual_src == expected_src
+
+    def test_remove_decorator(self):
+        """@snippetデコレータを取り除く.
+        """
+        targets = [
+"""@snippet(prefix='sample_1',
+        description='This snippet prefix is `sample1_1.`')
+def sample1_prefix_and_description():
+    pass
+""",
+"""@snippet
+def no_snippet_option():
+    pass
+""",
+"""def no_snippet_marker():
+    pass
+""",
+        ]
+
+        expected_results = [
+"""def sample1_prefix_and_description():
+    pass""",
+"""def no_snippet_option():
+    pass""",
+"""def no_snippet_marker():
+    pass""",
+        ]
+
+        actual_results = [utils.remove_decorator(t, '@snippet') for t in targets]
+        for actual, expected in zip(actual_results, expected_results):
+            assert actual == expected
