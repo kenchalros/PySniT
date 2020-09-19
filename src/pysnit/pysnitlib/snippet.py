@@ -15,27 +15,40 @@ class SnippetType(NamedTuple):
 
 
 class snippet:
-    """スニペットマーカー用クラス
+    """This class is snippet decorator.
+    Decorated methods or classes will be registerd as snippets.
+
+    how to use:
+    ```python
+    @snippet
+    def sample():
+        ...
+
+    @snippet(name='sample', prefix='s', description='sample method')
+    def sample2():
+        ...
+
+    @snippet(prefix='sc')
+    class Sample:
+        ...
+    ```
     """
     snippets: List[SnippetType] = []
 
     def __init__(self, *args, **kwargs) -> None:
-        # print()
-        # print("called __init__ with args:", args, "kwargs:", kwargs)
         self._obj = None
         self._args: Tuple[Any, ...] = ()
         self._kwargs: Dict[str, Any] = {}
         if len(args) == 1 and callable(args[0]):
-            self._obj = self._my_decorator(args[0])
+            self._obj = self._decorator(args[0])
         else:
             self._args = args
             self._kwargs = kwargs
 
     def __call__(self, *args, **kwargs) -> Any:
-        # print( "called __call__ with args:", args, "kwargs:", kwargs )
         if self._obj is None:
             if len(args) == 1 and callable(args[0]):
-                self._obj = self._my_decorator(args[0])
+                self._obj = self._decorator(args[0])
                 return self._obj
         else:
             try:
@@ -44,13 +57,8 @@ class snippet:
                 raise
             return ret
 
-    def _my_decorator(self, obj: Callable) -> Callable:
-        # print("called _my_decorator with obj:", obj)
-
-        # snippet register
-        self._check_snippet_option()
-        snippet = self._make_snippet(obj)
-        self._add_snippet(snippet)
+    def _decorator(self, obj: Callable) -> Callable:
+        self._register_snippet(obj)
 
         @wraps(obj)
         def wrapper(*args, **kwargs):
@@ -61,28 +69,36 @@ class snippet:
             return ret
         return wrapper
 
+    def _register_snippet(self, obj: Callable):
+        self._check_snippet_option()
+        snippet = self._make_snippet(obj)
+        self._add_snippet(snippet)
+
     def _make_snippet(self, obj: Callable) -> SnippetType:
-        """
+        """make snippet obj.
+        Default value of `name` and `prefix` is object name.
+        :param obj: decorated Callable obj
+        :return snippet
         """
         name: str = self._kwargs['name'] if 'name' in self._kwargs else obj.__name__
         prefix: str = self._kwargs['prefix'] if 'prefix' in self._kwargs else obj.__name__
-        description: Optional[str] = self._kwargs['description'] if 'description' in self._kwargs else None
         srccode: str = remove_decorator(getsource(obj), '@snippet')
-        snippet = SnippetType(name, prefix, srccode, description)
-        return snippet
+        description: Optional[str] = self._kwargs['description'] if 'description' in self._kwargs else None
+        return SnippetType(name, prefix, srccode, description)
 
     def _add_snippet(self, snippet: SnippetType) -> None:
-        """srccodeをsnippetsに追加する
+        """add srccode into snippets
+        :param snippet: snippet to be added
         """
         self.__class__.snippets.append(snippet)
 
     def _check_snippet_option(self):
-        """snippetデコレータのオプションをチェックする.
-        想定外のオプションが指定されている場合warningメッセージを表示する.
+        """Check options of snippet decorator.
+        If unsupported option is assigned, show warning messages.
         """
         item_keys = ['name', 'prefix', 'description']
         for key in self._kwargs.keys():
             if not key in item_keys:
                 warnings.warn('`{}` is not valid argument.'.format(key))
                 warnings.warn(
-                    'Valid arguments ars `prefix` and `description`.')
+                    'Valid arguments ars `name`, `prefix` and `description`.')
