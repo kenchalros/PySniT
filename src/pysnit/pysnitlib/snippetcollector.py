@@ -4,6 +4,7 @@ import toml
 import json
 from typing import List
 from .snippet import SnippetType
+from .vscode import get_vscode_snippet_dirpath
 from typing_extensions import TypedDict
 from typing import Optional
 
@@ -11,10 +12,12 @@ from typing import Optional
 class SnippetDict(TypedDict):
     name: str
 
+
 class Snippet(TypedDict):
     prefix: str
     body: str
     description: Optional[str]
+
 
 class SnippetCollector:
     """A class that manages snippets by snippet decorator.
@@ -29,6 +32,7 @@ class SnippetCollector:
     def register_snippets(self):
         self.load_snippets_from_toml()
         self._set_snippets_into_dict()
+        self._print_snippets()
         self.write_snippets_in_vscode_file()
 
     def _set_snippets_into_dict(self):
@@ -97,7 +101,7 @@ class SnippetCollector:
         """write snippet into vscode snippet file.
         `python.json` which already exists will be renamed to `python_old.json`
         """
-        vscode_snippet_dir: str = self._get_vscode_snippet_dirpath()
+        vscode_snippet_dir: str = get_vscode_snippet_dirpath()
         python_snippet = vscode_snippet_dir + 'python.json'
         if os.path.isfile(python_snippet):
             os.rename(python_snippet, vscode_snippet_dir + '/python_old.json')
@@ -105,10 +109,10 @@ class SnippetCollector:
         with open(python_snippet, 'w') as f:
             json.dump(self.dict_snippets, f, indent='\t')
 
-    def _get_vscode_snippet_dirpath(self) -> str:
-        """Get a path of vscode snippet directory.
-        :return vscode_snippet_dir: a path of vscode snippet directory
-        """
-        homedir = os.environ['HOME']
-        vscode_snippet_dir = homedir + '/Library/Application Support/Code/User/snippets/'
-        return vscode_snippet_dir
+    def _print_snippets(self):
+        names = self.dict_snippets.keys()
+        print('[snippet num]')
+        print(len(names))
+        print('[names]')
+        for name in names:
+            print('- {}'.format(name))
