@@ -1,5 +1,6 @@
 import fire
 from .pysnitlib.snippetcollector import SnippetCollector
+from .pysnitlib.vscode import show_registered_snippets
 
 
 class Commands:
@@ -17,6 +18,12 @@ class Commands:
         """
         SC = SnippetCollector(file)
         SC.register_snippets()
+
+    @staticmethod
+    def list():
+        """Show all snippets registered now.
+        """
+        show_registered_snippets()
 
 
 def main():
