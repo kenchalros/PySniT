@@ -59,7 +59,7 @@ sample = './sample.py'
 
 [printf]
 prefix = 'pf'
-body = ['print('$1'.format($2))]
+body = ["print('$1'.format($2))"]
 ```
 現状のプロジェクトディレクトリは下記のようになっています。
 ```text
