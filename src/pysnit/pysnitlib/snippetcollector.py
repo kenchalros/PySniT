@@ -44,10 +44,19 @@ class SnippetCollector:
         :param snippet_filepath: snippet file path
         :return dict_toml: readed toml dict
         """
-        dict_toml = None
-        with open(snippet_filepath, 'r') as f:
-            dict_toml = toml.load(f)
-        return dict_toml
+        try:
+            dict_toml = None
+            with open(snippet_filepath, 'r') as f:
+                dict_toml = toml.load(f)
+            return dict_toml
+        except FileNotFoundError as e:
+            print('{}: {}'.format(e.__class__.__name__, e))
+            print("If you don't have 'snippet.toml' on current working directory, please create it.")
+            print("If you have another name file, please use '--file' option.")
+            print("You can find details with the command 'pysnit help'.")
+            exit(1)
+        except IOError as e:
+            raise e
 
     def load_snippets_from_toml(self):
         """Load snippets from dict_toml and then set.
