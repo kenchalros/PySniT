@@ -2,6 +2,7 @@ from importlib.util import spec_from_file_location, module_from_spec
 from importlib.abc import Loader
 import sys
 import importlib
+from .errorhandle import errmsghandler
 
 
 def load_module_from_path(module_name: str, module_path: str):
@@ -10,21 +11,27 @@ def load_module_from_path(module_name: str, module_path: str):
     :param module_path: module file path
     :return module: imported module
     """
-    spec = spec_from_file_location(module_name, module_path)
-    module = module_from_spec(spec)
-    sys.modules[module_name] = module
+    try:
+        spec = spec_from_file_location(module_name, module_path)
+        module = module_from_spec(spec)
+        sys.modules[module_name] = module
 
-    # This assert statement needed for fix below error with mypy.
-    # error message:
-    #   error: Item "_Loader" of "Optional[_Loader]" has no attribute "exec_module"
-    #   error: Item "None" of "Optional[_Loader]" has no attribute "exec_module"
-    # reference link:
-    #   https://github.com/python/typeshed/issues/2793
-    assert isinstance(spec.loader, Loader)
+        # This assert statement needed for fix below error with mypy.
+        # error message:
+        #   error: Item "_Loader" of "Optional[_Loader]" has no attribute "exec_module"
+        #   error: Item "None" of "Optional[_Loader]" has no attribute "exec_module"
+        # reference link:
+        #   https://github.com/python/typeshed/issues/2793
+        assert isinstance(spec.loader, Loader)
 
-    spec.loader.exec_module(module)
-
-    return module
+        spec.loader.exec_module(module)
+        return module
+    except FileNotFoundError as e:
+        @errmsghandler(e)
+        def _errmsg():
+            print('Module path may be wrong in the snippet setting file.')
+            print("Please fix '{}'.".format(module_path))
+        _errmsg()
 
 
 def remove_decorator(srccode: str, decorator: str) -> str:
