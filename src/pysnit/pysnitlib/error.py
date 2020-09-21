@@ -1,0 +1,2 @@
+class NotFoundBodyKey(Exception):
+    pass

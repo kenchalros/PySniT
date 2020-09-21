@@ -7,6 +7,8 @@ from .snippet import SnippetType
 from .vscode import get_vscode_snippet_dirpath
 from typing_extensions import TypedDict
 from typing import Optional
+from .errorhandle import errmsghandler
+from .error import NotFoundBodyKey
 
 
 class SnippetDict(TypedDict):
@@ -50,11 +52,13 @@ class SnippetCollector:
                 dict_toml = toml.load(f)
             return dict_toml
         except FileNotFoundError as e:
-            print('{}: {}'.format(e.__class__.__name__, e))
-            print("If you don't have 'snippet.toml' on current working directory, please create it.")
-            print("If you have another name file, please use '--file' option.")
-            print("You can find details with the command 'pysnit help'.")
-            exit(1)
+            @errmsghandler(e)
+            def _errmsg():
+                print(
+                    "If you don't have 'snippet.toml' on current working directory, please create it.")
+                print("If you have another name file, please use '--file' option.")
+                print("You can find details with the command 'pysnit help'.")
+            _errmsg()
         except IOError as e:
             raise e
 
@@ -62,10 +66,15 @@ class SnippetCollector:
         """Load snippets from dict_toml and then set.
         :param dict_toml: snippet file content
         """
-        # TODO: keyが存在しない場合等へのエラー処理を追加する
         # 'module' snippets will be dynamically imported.
         # other inline snippets will be read as it is.
-        modules = self.dict_toml.pop('module')
+        try:
+            modules = self.dict_toml.pop('module')
+        except KeyError as e:
+            @errmsghandler(e)
+            def _errmsg():
+                print("toml setting file MUST contain ['module'] section.")
+            _errmsg()
         for modulename, modulepath in modules.items():
             # This `module` variable is overwrited each iteration, but it's OK.
             module = utils.load_module_from_path(modulename, modulepath)
@@ -97,11 +106,23 @@ class SnippetCollector:
     def _inline_snippets_to_dict(self):
         """Set inline snippet content to snippet dict.
         if `prefix` is empty, the value will be filled with name automatically.
+        raise exception if `body` doesn't exist in content.
         """
-        for name, content in self.inline_snippets.items():
-            if not 'prefix' in content.keys():
-                content['prefix']: str = name
-            self.dict_snippets[name] = content
+        try:
+            for name, content in self.inline_snippets.items():
+                if not 'body' in content.keys():
+                    raise NotFoundBodyKey()
+                if not 'prefix' in content.keys():
+                    content['prefix']: str = name
+                self.dict_snippets[name] = content
+        except NotFoundBodyKey as e:
+            @errmsghandler(e)
+            def _errmsg():
+                print("`inline snippet` MUST have 'body'.")
+                print(
+                    "However, [{}] doesn't have one in the snippet setting file.".format(name))
+            _errmsg()
+            exit(1)
 
     def to_json(self):
         print(json.dumps(self.dict_snippets, indent='\t'))
@@ -112,11 +133,15 @@ class SnippetCollector:
         """
         vscode_snippet_dir: str = get_vscode_snippet_dirpath()
         python_snippet = vscode_snippet_dir + 'python.json'
-        if os.path.isfile(python_snippet):
-            os.rename(python_snippet, vscode_snippet_dir + '/python_old.json')
-
-        with open(python_snippet, 'w') as f:
-            json.dump(self.dict_snippets, f, indent='\t')
+        try:
+            if os.path.isfile(python_snippet):
+                os.rename(python_snippet, vscode_snippet_dir +
+                          '/python_old.json')
+            with open(python_snippet, 'w') as f:
+                json.dump(self.dict_snippets, f, indent='\t')
+        except IOError as e:
+            print('{}: {}'.format(e.__class__.__name__, e))
+            exit(1)
 
     def _print_snippets(self):
         names = self.dict_snippets.keys()
