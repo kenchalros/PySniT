@@ -30,5 +30,8 @@ def show_registered_snippets() -> None:
         print('[prefix]\n{}'.format(content['prefix']))
         print('[description]\n{}'.format(content.get('description')))
         print('[body]')
-        print('\n'.join(content['body']).replace('\t', '    '))
+        if isinstance(content['body'], list):
+            print('\n'.join(content['body']).replace('\t', '    '))
+        else:
+            print(content['body'])
         print()
