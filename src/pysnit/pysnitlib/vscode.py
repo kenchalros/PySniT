@@ -11,6 +11,11 @@ def get_vscode_snippet_dirpath() -> str:
     return vscode_snippet_dir
 
 
+def get_vscode_snippet_filepath(filename) -> str:
+    dirpath = get_vscode_snippet_dirpath()
+    return dirpath + filename
+
+
 def show_registered_snippets() -> None:
     """Show snippets registered now.
     """
