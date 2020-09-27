@@ -4,6 +4,15 @@ import json
 import os
 import sys
 
+def yes_or_no() -> bool:
+    while True:
+        ans = input('[Y]es/[N]o? >> ').lower()
+        if ans in ('y', 'yes', 'n', 'no'):
+            return ans.startswith('y')
+        print('Error! Input again.')
+
+SNIPPET_FILE = 'python.json'
+BACKUP_FILE = 'python_backup.json'
 
 class SnippetFileIO:
     """Snippetの書き込み,削除,バックアップ等の操作を行う.
@@ -15,38 +24,32 @@ class SnippetFileIO:
     def backup(self) -> None:
         """Back up snippet file.
         """
-        if not self.is_python_json_exists('python.json'):
-            print("`python.json` to back up doesn't exist.")
+        if not self.is_python_json_exists(SNIPPET_FILE):
+            print("`{}` to back up doesn't exist.".format(SNIPPET_FILE))
             return
 
-        if self.is_python_json_exists('python_backup.json'):
-            print("`python_backup.json` already exists.")
+        if self.is_python_json_exists(BACKUP_FILE):
+            print("`{}` already exists.".format(BACKUP_FILE))
             print("Update backup file?")
-            dic = {'y': True, 'yes': True, 'n': False, 'no': False}
-            ans = False
-            while True:
-                ans = input('[Y]es/[N]o? >> ').lower()
-                if ans in dic:
-                    ans = dic[ans]
-                    break
-                print('Error! Input again.')
+            ans = yes_or_no()
             if ans:
                 self.backup_snippet_file()
                 print("Update backup file.")
         else:
             self.backup_snippet_file()
-            print("Created backup file `python_backup.json`.")
+            print("Created backup file `{}`.".format(BACKUP_FILE))
 
     def backup_snippet_file(self):
-        src_filepath = get_vscode_snippet_filepath('python.json')
-        dist_filepath = get_vscode_snippet_filepath(
-            'python_backup.json')
+        """Copy `python.json` into `python_backup.json`.
+        """
+        src_filepath = get_vscode_snippet_filepath(SNIPPET_FILE)
+        dist_filepath = get_vscode_snippet_filepath(BACKUP_FILE)
         shutil.copy(src_filepath, dist_filepath)
 
     def write_snippets_in_vscode_file(self, snippet_dict):
         """Write snippet into vscode setting file.
         """
-        python_snippet_file = get_vscode_snippet_filepath('python.json')
+        python_snippet_file = get_vscode_snippet_filepath(SNIPPET_FILE)
         with open(python_snippet_file, 'w') as f:
             json.dump(snippet_dict, f, indent='\t')
 
