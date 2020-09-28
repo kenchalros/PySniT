@@ -6,36 +6,38 @@ from typing import List
 from .snippet import SnippetType
 from .vscode import get_vscode_snippet_dirpath
 from typing_extensions import TypedDict
-from typing import Optional
+from typing import Optional, NamedTuple, Any
 from .errorhandle import errmsghandler
 from .error import NotFoundBodyKey
+from .funcs import f_chain
 
 
-class SnippetDict(TypedDict):
-    name: str
+class Snippets(NamedTuple):
+    module: Any
+    inline: Any
 
 
-class Snippet(TypedDict):
-    prefix: str
-    body: str
-    description: Optional[str]
+def register_snippets(filepath: str) -> None:
+    """Register snippets from snippet setting file.
+    """
+    f_chain(filepath,
+            _read_snippet_file,
+            _load_snippets_from_toml,
+            _set_snippets_into_dict,
+            _print_snippets,
+            _write_snippets_in_vscode_file)
 
 
-def register_snippets(filepath):
-    dict_toml = _read_snippet_file(filepath)
-    module_snippets, inline_snippets = load_snippets_from_toml(dict_toml)
-    dict_snippets = _set_snippets_into_dict(module_snippets, inline_snippets)
-    _print_snippets(dict_snippets)
-    write_snippets_in_vscode_file(dict_snippets)
-
-def _set_snippets_into_dict(module_snippets, inline_snippets):
+def _set_snippets_into_dict(snippets: Snippets):
     dict_snippets = {}
-    dict_module_snippets = _module_snippets_to_dict(module_snippets)
-    dict_inline_snippets = _inline_snippets_to_dict(inline_snippets)
+
+    dict_module_snippets = _module_snippets_to_dict(snippets.module)
+    dict_inline_snippets = _inline_snippets_to_dict(snippets.inline)
 
     dict_snippets.update(dict_module_snippets)
     dict_snippets.update(dict_inline_snippets)
     return dict_snippets
+
 
 def _read_snippet_file(snippet_filepath):
     """Read snippet manage file and then set dict_toml
@@ -58,7 +60,8 @@ def _read_snippet_file(snippet_filepath):
     except IOError as e:
         raise e
 
-def load_snippets_from_toml(dict_toml):
+
+def _load_snippets_from_toml(dict_toml) -> Snippets:
     """Load snippets from dict_toml and then set.
     :param dict_toml: snippet file content
     """
@@ -77,7 +80,9 @@ def load_snippets_from_toml(dict_toml):
 
     module_snippets = module.snippet.snippets
     inline_snippets = dict_toml
-    return module_snippets, inline_snippets
+
+    return Snippets(module_snippets, inline_snippets)
+
 
 def _transform_body_for_vscode(body: str) -> List[str]:
     """snippetのbodyをvscode用に変換する.
@@ -88,6 +93,7 @@ def _transform_body_for_vscode(body: str) -> List[str]:
     body_list = body.split('\n')
     body_for_vscode = [b.replace('    ', '\t') for b in body_list]
     return body_for_vscode
+
 
 def _module_snippets_to_dict(module_snippets):
     """Set module snippet content to snippet dict.
@@ -102,6 +108,7 @@ def _module_snippets_to_dict(module_snippets):
             content['description']: str = description
         dict_snippets[name] = content
     return dict_snippets
+
 
 def _inline_snippets_to_dict(inline_snippets):
     """Set inline snippet content to snippet dict.
@@ -126,7 +133,8 @@ def _inline_snippets_to_dict(inline_snippets):
         _errmsg()
         exit(1)
 
-def write_snippets_in_vscode_file(dict_snippets):
+
+def _write_snippets_in_vscode_file(dict_snippets):
     """write snippet into vscode snippet file.
     `python.json` which already exists will be renamed to `python_old.json`
     """
@@ -135,12 +143,13 @@ def write_snippets_in_vscode_file(dict_snippets):
     try:
         if os.path.isfile(python_snippet):
             os.rename(python_snippet, vscode_snippet_dir +
-                        '/python_old.json')
+                      '/python_old.json')
         with open(python_snippet, 'w') as f:
             json.dump(dict_snippets, f, indent='\t')
     except IOError as e:
         print('{}: {}'.format(e.__class__.__name__, e))
         exit(1)
+
 
 def _print_snippets(dict_snippets):
     names = dict_snippets.keys()
