@@ -6,40 +6,56 @@ from typing import List
 from .snippet import SnippetType
 from .vscode import get_vscode_snippet_dirpath
 from typing_extensions import TypedDict
-from typing import Optional, NamedTuple, Any
+from typing import Optional, NamedTuple, Any, Union, Dict, NoReturn, NewType
 from .errorhandle import errmsghandler
 from .error import NotFoundBodyKey
 from .funcs import f_chain
 
 
-class Snippets(NamedTuple):
-    module: Any
-    inline: Any
+class ModuleSnippet(TypedDict):
+    module: Dict[str, str]
+
+
+InlineSnippet = NewType('InlineSnippet', Dict[str, Dict])
+
+
+class SnippetData(NamedTuple):
+    module: List[SnippetType]
+    inline: InlineSnippet
+
+
+class SnippetContent(TypedDict):
+    prefix: str
+    body: Union[str, List[str]]
+    description: Optional[str]
+
+
+SnippetDict = NewType('SnippetDict', Dict[str, SnippetContent])
 
 
 def register_snippets(filepath: str) -> None:
     """Register snippets from snippet setting file.
+    :param filepath: snippet setting toml.
     """
     f_chain(filepath,
             _read_snippet_file,
             _load_snippets_from_toml,
-            _set_snippets_into_dict,
+            _convert_snippets_to_dict,
             _print_snippets,
             _write_snippets_in_vscode_file)
 
 
-def _set_snippets_into_dict(snippets: Snippets):
-    dict_snippets = {}
-
+def _convert_snippets_to_dict(snippets: SnippetData) -> SnippetDict:
+    """
+    :param snippets
+    :return dict of snippets
+    """
     dict_module_snippets = _module_snippets_to_dict(snippets.module)
     dict_inline_snippets = _inline_snippets_to_dict(snippets.inline)
-
-    dict_snippets.update(dict_module_snippets)
-    dict_snippets.update(dict_inline_snippets)
-    return dict_snippets
+    return {**dict_module_snippets, **dict_inline_snippets}
 
 
-def _read_snippet_file(snippet_filepath):
+def _read_snippet_file(snippet_filepath: str):
     """Read snippet manage file and then set dict_toml
     :param snippet_filepath: snippet file path
     :return dict_toml: readed toml dict
@@ -61,12 +77,12 @@ def _read_snippet_file(snippet_filepath):
         raise e
 
 
-def _load_snippets_from_toml(dict_toml) -> Snippets:
+def _load_snippets_from_toml(dict_toml: Dict) -> SnippetData:
     """Load snippets from dict_toml and then set.
     :param dict_toml: snippet file content
     """
     # 'module' snippets will be dynamically imported.
-    # other inline snippets will be read as it is.
+    # other 'inline' snippets will be read as it is.
     try:
         modules = dict_toml.pop('module')
     except KeyError as e:
@@ -81,7 +97,7 @@ def _load_snippets_from_toml(dict_toml) -> Snippets:
     module_snippets = module.snippet.snippets
     inline_snippets = dict_toml
 
-    return Snippets(module_snippets, inline_snippets)
+    return SnippetData(module_snippets, inline_snippets)
 
 
 def _transform_body_for_vscode(body: str) -> List[str]:
@@ -95,34 +111,42 @@ def _transform_body_for_vscode(body: str) -> List[str]:
     return body_for_vscode
 
 
-def _module_snippets_to_dict(module_snippets):
+def _module_snippets_to_dict(module_snippets: List[SnippetType]) -> SnippetDict:
     """Set module snippet content to snippet dict.
+    :param module_snippets
+    :return snippets converted dict format
     """
-    dict_snippets = {}
+    dict_snippets: SnippetDict = {}
     for snippet in module_snippets:
         name, prefix, body, description = snippet
-        content = {}
-        content['prefix']: str = prefix
-        content['body']: List[str] = _transform_body_for_vscode(body)
-        if description is not None:
-            content['description']: str = description
+        content: SnippetContent = {
+            'prefix': prefix,
+            'body': _transform_body_for_vscode(body),
+            'description': description,
+        }
         dict_snippets[name] = content
     return dict_snippets
 
 
-def _inline_snippets_to_dict(inline_snippets):
+def _inline_snippets_to_dict(inline_snippets: InlineSnippet) -> Union[SnippetDict, NoReturn]:
     """Set inline snippet content to snippet dict.
     if `prefix` is empty, the value will be filled with name automatically.
-    raise exception if `body` doesn't exist in content.
+    :param inline_snippets: 
+    :return dict_snippets: 
+    :error NotFoundBodyKey: if `body` doesn't exist in content, raise NotFoundBodyKey error.
     """
     try:
-        dict_snippets = {}
+        dict_snippets: SnippetDict = {}
         for name, content in inline_snippets.items():
             if not 'body' in content.keys():
                 raise NotFoundBodyKey()
             if not 'prefix' in content.keys():
-                content['prefix']: str = name
-            dict_snippets[name] = content
+                content['prefix'] = name
+            dict_snippets[name] = {
+                'prefix': content['prefix'],
+                'body': content['body'],
+                'description': 'hoge'
+            }
         return dict_snippets
     except NotFoundBodyKey as e:
         @errmsghandler(e)
@@ -134,7 +158,7 @@ def _inline_snippets_to_dict(inline_snippets):
         exit(1)
 
 
-def _write_snippets_in_vscode_file(dict_snippets):
+def _write_snippets_in_vscode_file(dict_snippets: SnippetDict) -> Union[None, NoReturn]:
     """write snippet into vscode snippet file.
     `python.json` which already exists will be renamed to `python_old.json`
     """
@@ -146,12 +170,13 @@ def _write_snippets_in_vscode_file(dict_snippets):
                       '/python_old.json')
         with open(python_snippet, 'w') as f:
             json.dump(dict_snippets, f, indent='\t')
+        return None
     except IOError as e:
         print('{}: {}'.format(e.__class__.__name__, e))
         exit(1)
 
 
-def _print_snippets(dict_snippets):
+def _print_snippets(dict_snippets: SnippetDict) -> None:
     names = dict_snippets.keys()
     print('[snippet num]')
     print(len(names))
