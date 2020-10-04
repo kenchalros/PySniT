@@ -16,7 +16,7 @@ class ModuleSnippet(TypedDict):
     module: Dict[str, str]
 
 
-InlineSnippet = NewType('InlineSnippet', Dict[str, Dict])
+InlineSnippet = Dict[str, Dict]
 
 
 class SnippetData(NamedTuple):
@@ -30,7 +30,7 @@ class SnippetContent(TypedDict):
     description: Optional[str]
 
 
-SnippetDict = NewType('SnippetDict', Dict[str, SnippetContent])
+SnippetDict = Dict[str, SnippetContent]
 
 
 def register_snippets(filepath: str) -> None:
