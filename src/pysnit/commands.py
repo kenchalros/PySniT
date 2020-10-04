@@ -2,19 +2,13 @@ import fire
 from .pysnitlib.snippetcollector import register_snippets
 from .pysnitlib.vscode import show_registered_snippets
 from .pysnitlib import snippetfileio as snptio
+from .pysnitlib.funcs import f_chain
 
 
 class Commands:
-
-    @staticmethod
-    def help():
-        """show help messages
-        """
-        pass
-
     @staticmethod
     def backup():
-        """
+        """Backup 'python.json' to 'python_backup.json'.
         """
         snptio.backup()
 
@@ -30,8 +24,9 @@ class Commands:
         :param filepath: file path of snippet setting file. default value is `./snippet.toml`
         """
         snptio.backup()
-        snippet_dict = register_snippets(file)
-        snptio.write_snippets_in_vscode_file(snippet_dict)
+        f_chain(file,
+                register_snippets,
+                snptio.write_snippets_in_vscode_file)
 
     @staticmethod
     def list():
