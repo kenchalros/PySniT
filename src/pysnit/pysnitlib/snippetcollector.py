@@ -2,15 +2,12 @@ import os
 from . import utils
 import toml
 import json
-from typing import List
-from .snippet import SnippetType
 from .vscode import get_vscode_snippet_dirpath
-from typing_extensions import TypedDict
-from typing import Optional, NamedTuple, Any, Union, Dict, NoReturn, NewType
 from .errorhandle import errmsghandler
 from .error import NotFoundBodyKey
 from .funcs import f_chain
-from .types import ModuleSnippet, InlineSnippet, SnippetData, SnippetContent, SnippetDict
+from .types import SnippetType, ModuleSnippet, InlineSnippet, SnippetData, SnippetContent, SnippetDict
+from typing import List, Dict, NoReturn, Union
 
 
 def register_snippets(filepath: str) -> SnippetDict:

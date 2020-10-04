@@ -1,11 +1,9 @@
 from inspect import getsource, getdoc
-
-from typing import NamedTuple
-from typing import List, Dict, Tuple, Any, Callable, Optional
 from functools import wraps
 import warnings
 from .utils import remove_decorator
 from .types import SnippetType
+from typing import Tuple, List, Dict, Optional, Callable, Any
 
 
 class snippet:
