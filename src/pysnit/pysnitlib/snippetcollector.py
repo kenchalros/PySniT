@@ -3,8 +3,7 @@ from . import utils
 import toml
 import json
 from .vscode import get_vscode_snippet_dirpath
-from .errorhandle import errmsghandler
-from .error import NotFoundBodyKey
+from .errors import NotFoundBodyKey, errmsghandler
 from .funcs import f_chain
 from .types import SnippetType, ModuleSnippet, InlineSnippet, SnippetData, SnippetContent, SnippetDict
 from typing import List, Dict, NoReturn, Union

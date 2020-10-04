@@ -2,7 +2,7 @@ from importlib.util import spec_from_file_location, module_from_spec
 from importlib.abc import Loader
 import sys
 import importlib
-from .errorhandle import errmsghandler
+from .errors import errmsghandler
 
 
 def load_module_from_path(module_name: str, module_path: str):
