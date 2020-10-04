@@ -135,24 +135,6 @@ def _inline_snippets_to_dict(inline_snippets: InlineSnippet) -> Union[SnippetDic
         exit(1)
 
 
-def _write_snippets_in_vscode_file(dict_snippets: SnippetDict) -> Union[None, NoReturn]:
-    """write snippet into vscode snippet file.
-    `python.json` which already exists will be renamed to `python_old.json`
-    """
-    vscode_snippet_dir: str = get_vscode_snippet_dirpath()
-    python_snippet = vscode_snippet_dir + 'python.json'
-    try:
-        if os.path.isfile(python_snippet):
-            os.rename(python_snippet, vscode_snippet_dir +
-                      '/python_old.json')
-        with open(python_snippet, 'w') as f:
-            json.dump(dict_snippets, f, indent='\t')
-        return None
-    except IOError as e:
-        print('{}: {}'.format(e.__class__.__name__, e))
-        exit(1)
-
-
 def _print_snippets(dict_snippets: SnippetDict) -> None:
     names = dict_snippets.keys()
     print('[snippet num]')
