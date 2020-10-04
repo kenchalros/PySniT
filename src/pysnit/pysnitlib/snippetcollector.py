@@ -10,27 +10,7 @@ from typing import Optional, NamedTuple, Any, Union, Dict, NoReturn, NewType
 from .errorhandle import errmsghandler
 from .error import NotFoundBodyKey
 from .funcs import f_chain
-
-
-class ModuleSnippet(TypedDict):
-    module: Dict[str, str]
-
-
-InlineSnippet = Dict[str, Dict]
-
-
-class SnippetData(NamedTuple):
-    module: List[SnippetType]
-    inline: InlineSnippet
-
-
-class SnippetContent(TypedDict):
-    prefix: str
-    body: Union[str, List[str]]
-    description: Optional[str]
-
-
-SnippetDict = Dict[str, SnippetContent]
+from .types import ModuleSnippet, InlineSnippet, SnippetData, SnippetContent, SnippetDict
 
 
 def register_snippets(filepath: str) -> SnippetDict:

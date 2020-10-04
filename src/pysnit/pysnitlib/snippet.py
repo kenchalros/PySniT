@@ -5,13 +5,7 @@ from typing import List, Dict, Tuple, Any, Callable, Optional
 from functools import wraps
 import warnings
 from .utils import remove_decorator
-
-
-class SnippetType(NamedTuple):
-    name: str
-    prefix: str
-    body: str
-    description: Optional[str]
+from .types import SnippetType
 
 
 class snippet:
