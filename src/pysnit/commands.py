@@ -1,6 +1,7 @@
 import fire
-from .pysnitlib.snippetcollector import SnippetCollector
+from .pysnitlib.snippetcollector import register_snippets
 from .pysnitlib.vscode import show_registered_snippets
+from .pysnitlib import snippetfileio as snptio
 
 
 class Commands:
@@ -12,12 +13,25 @@ class Commands:
         pass
 
     @staticmethod
-    def snpt(file='snippet.toml'):
-        """register snippets from snippet manage file.
-        :param filepath: file path of snippet manager file. default value is `snippet.toml`
+    def backup():
         """
-        SC = SnippetCollector(file)
-        SC.register_snippets()
+        """
+        snptio.backup()
+
+    @staticmethod
+    def restore():
+        """Restore 'python.json' from 'python_backup.json`.
+        """
+        snptio.restore()
+
+    @staticmethod
+    def snpt(file='snippet.toml'):
+        """Register snippets from snippet setting file.
+        :param filepath: file path of snippet setting file. default value is `./snippet.toml`
+        """
+        snptio.backup()
+        snippet_dict = register_snippets(file)
+        snptio.write_snippets_in_vscode_file(snippet_dict)
 
     @staticmethod
     def list():
