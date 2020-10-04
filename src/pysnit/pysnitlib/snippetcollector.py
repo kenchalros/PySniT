@@ -33,16 +33,16 @@ class SnippetContent(TypedDict):
 SnippetDict = Dict[str, SnippetContent]
 
 
-def register_snippets(filepath: str) -> None:
+def register_snippets(filepath: str) -> SnippetDict:
     """Register snippets from snippet setting file.
     :param filepath: snippet setting toml.
     """
-    f_chain(filepath,
-            _read_snippet_file,
-            _load_snippets_from_toml,
-            _convert_snippets_to_dict,
-            _print_snippets,
-            _write_snippets_in_vscode_file)
+    snippet_dict = f_chain(filepath,
+                           _read_snippet_file,
+                           _load_snippets_from_toml,
+                           _convert_snippets_to_dict)
+    _print_snippets(snippet_dict)
+    return snippet_dict
 
 
 def _convert_snippets_to_dict(snippets: SnippetData) -> SnippetDict:
